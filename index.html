@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный учебник-песочница JavaScript</title>
+    <style>
+        /* === CSS: ОФОРМЛЕНИЕ ИНТЕРФЕЙСА === */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #f4f6f9; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Кнопки вкладок */
+        nav { display: flex; justify-content: center; background: #ffffff; border-bottom: 2px solid #e0e0e0; flex-wrap: wrap; }
+        .tab-btn { background: none; border: none; padding: 15px 20px; font-size: 15px; font-weight: 600; cursor: pointer; color: #555; transition: 0.3s; }
+        .tab-btn:hover { color: #2a5298; background: #f0f4f8; }
+        .tab-btn.active { color: #2a5298; border-bottom: 3px solid #2a5298; background: #e8f0fe; }
+
+        main { flex: 1; max-width: 900px; width: 100%; margin: 20px auto; padding: 20px; padding-bottom: 140px; }
+        .tab-content { display: none; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tab-content.active { display: block; }
+
+        h2 { margin-bottom: 15px; color: #2a5298; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; }
+        h3 { margin: 25px 0 10px 0; color: #1e3c72; font-size: 18px; border-top: 1px dashed #ddd; padding-top: 15px; }
+        p { margin-bottom: 10px; line-height: 1.6; font-size: 15px; }
+        
+        .theory-box { background: #f9fbfd; padding: 15px; border-left: 4px solid #2a5298; margin-bottom: 12px; border-radius: 0 4px 4px 0; }
+        .syntax { font-family: monospace; background: #272822; color: #f8f8f2; padding: 8px 12px; border-radius: 4px; font-size: 13px; margin: 8px 0; display: block; white-space: pre-wrap; }
+
+        /* Поля ввода чисел */
+        .num-block { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: #fff8f0; padding: 8px; border-radius: 4px; border: 1px solid #ffe0b2; }
+        .num-block label { font-size: 14px; font-weight: bold; color: #e65100; }
+        .num-block input[type="number"] { width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+
+        /* Поля ввода кода (Пустые текстовые области) */
+        textarea.code-input { width: 100%; height: 110px; font-family: monospace; font-size: 14px; padding: 12px; border: 2px solid #ccc; border-radius: 6px; background: #fff; resize: vertical; margin-bottom: 8px; }
+        textarea.code-input:focus { border-color: #2a5298; outline: none; background: #fafffa; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        
+        button.action-btn { background-color: #2a5298; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-bottom: 10px; }
+        button.action-btn:hover { background-color: #1e3c72; }
+
+        /* Фиксированный терминал внизу */
+        .console-box { position: fixed; bottom: 0; left: 0; right: 0; background: #1e1e1e; color: #76c7ff; padding: 15px 30px; font-family: monospace; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); z-index: 1000; font-size: 14px; max-height: 110px; overflow-y: auto; }
+
+        /* Чат и авторизация */
+        .auth-box { max-width: 400px; margin: 0 auto; text-align: center; }
+        .success-box { color: green; text-align: center; padding: 20px; }
+        .chat-container { max-width: 600px; margin: 0 auto; }
+        .chat-box { border: 1px solid #ddd; height: 180px; overflow-y: auto; padding: 15px; background: #fafafa; border-radius: 5px; margin-bottom: 10px; color: #333; }
+        .msg { margin: 8px 0; padding: 8px 12px; border-radius: 6px; max-width: 80%; font-size: 14px; }
+        .user-msg { background-color: #e1f5fe; margin-left: auto; text-align: right; }
+        .bot-msg { background-color: #e8f5e9; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Интерактивный учебник по JavaScript</h1>
+        <p>Вводите любые цифры в оранжевые поля, пишите код и смотрите на результат внизу</p>
+    </header>
+
+    <nav>
+        <button class="tab-btn" onclick="openTab('html-tab')">HTML (Структура)</button>
+        <button class="tab-btn" onclick="openTab('css-tab')">CSS (Стили)</button>
+        <button class="tab-btn active" onclick="openTab('js-tab')">JavaScript (Песочница)</button>
+        <button class="tab-btn" onclick="openTab('auth-tab')">🔐 Авторизация</button>
+        <button class="tab-btn" onclick="openTab('support-tab')">🎧 Служба поддержки</button>
+    </nav>
+
+    <main>
+        <!-- ВКЛАДКА 1: HTML -->
+        <div id="html-tab" class="tab-content">
+            <h2>Разметка страницы (HTML)</h2>
+            <p>HTML строит каркас. Здесь нет логики вычислений.</p>
+        </div>
+
+        <!-- ВКЛАДКА 2: CSS -->
+        <div id="css-tab" class="tab-content">
+            <h2>Оформление страницы (CSS)</h2>
+            <p>CSS задает внешний вид: цвета, размеры, шрифты.</p>
+        </div>
+
+        <!-- ВКЛАДКА 3: JAVASCRIPT (ПЕСОЧНИЦА С ВВОДОМ ЦИФР) -->
+        <div id="js-tab" class="tab-content active">
+            <h2>Абсолютно все типы логики JavaScript</h2>
+            <p style="background: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                <b>Как использовать свои цифры:</b> Чтобы считать введенное число в коде, используйте встроенную функцию <code>getNum()</code>. Она автоматически возьмет цифру из поля над редактором.
+            </p>
+            
+            <!-- 1. Переменные -->
+            <h3>1. Переменные и Арифметика</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Хранение данных в памяти и выполнение расчетов. Измените цифры в полях ниже, чтобы сложить их вашим кодом.</p>
+                <p><b>Шаблон для проверки (скопируйте в поле ввода):</b></p>
+                <span class="syntax">let a = getNum("v1"); // Считает первое число<br>let b = getNum("v2"); // Считает второе число<br>log("Результат сложения: " + (a + b));</span>
+            </div>
+            <div class="num-block">
+                <label>Число 1:</label> <input type="number" id="num-v1" value="10">
+                <label style="margin-left:15px;">Число 2:</label> <input type="number" id="num-v2" value="5">
+            </div>
+            <textarea id="code-var" class="code-input" placeholder="Напишите код арифметики..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-var')">Проверить мой код</button>
+
+            <!-- 2. Условия -->
+            <h3>2. Условные операторы (If / Else)</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Разветвление программы. Проверим введенное вами число на соответствие условию (например, возраст или баланс счета).</p>
+                <p><b>Шаблон для проверки:</b></p>
+                <span class="syntax">let n = getNum("c1");<br>if (n >= 18) { log("Число больше или равно 18"); } else { log("Число меньше 18"); }</span>
+            </div>
+            <div class="num-block">
+                <label>Проверяемое число:</label> <input type="number" id="num-c1" value="20">
+            </div>
+            <textarea id="code-if" class="code-input" placeholder="Напишите здесь свой код с условиями if / else..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-if')">Проверить мой код</button>
+
+            <!-- 3. Циклы -->
+            <h3>3. Циклы (Loops)</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Повторение действий. Задайте число в поле ввода, чтобы определить, сколько именно кругов (итераций) должен сделать цикл.</p>
+                <p><b>Шаблон для проверки:</b></p>
+                <span class="syntax">let limit = getNum("l1");<br>for (let i = 1; i <= limit; i++) {<br>    log("Повторение №" + i);<br>}</span>
+            </div>
+            <div class="num-block">
+                <label>Сколько раз повторить цикл?:</label> <input type="number" id="num-l1" value="3" min="1" max="20">
+            </div>
+            <textarea id="code-loop" class="code-input" placeholder="Напишите здесь свой цикл..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-loop')">Проверить мой код</button>
+
+            <!-- 4. Массивы -->
+            <h3>4. Массивы (Списки)</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Группировка данных. Вы можете указать числовой индекс элемента, который хотите извлечь из созданного списка.</p>
+                <p><b>Шаблон для проверки:</b></p>
+                <span class="syntax">let index = getNum("a1");<br>let shop = ["Хлеб", "Молоко", "Сыр", "Масло"];<br>log("Выбранный товар: " + shop[index]);</span>
+            </div>
+            <div class="num-block">
+                <label>Индекс элемента массива (от 0 до 3):</label> <input type="number" id="num-a1" value="1" min="0" max="3">
+            </div>
+            <textarea id="code-arr" class="code-input" placeholder="Создайте массив и обратитесь к нему по введенному индексу..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-arr')">Проверить мой код</button>
+
+            <!-- 5. Объекты -->
+            <h3>5. Объекты</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Структурирование информации. Задайте новую цену в поле, чтобы динамически обновить стоимость внутри объекта.</p>
+                <p><b>Шаблон для проверки:</b></p>
+                <span class="syntax">let newPrice = getNum("o1");<br>const item = { name: "Ноутбук", price: 50000 };<br>item.price = newPrice; // Перезапись свойства объекта<br>log(item.name + " теперь стоит " + item.price + " руб.");</span>
+            </div>
+            <div class="num-block">
+                <label>Установите цену в объект:</label> <input type="number" id="num-o1" value="65000">
+            </div>
+            <textarea id="code-obj" class="code-input" placeholder="Напишите код для работы с объектом..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-obj')">Проверить мой код</button>
+
+            <!-- 6. Асинхронность -->
+            <h3>6. Асинхронность и Таймеры</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Управление временем. Задайте количество миллисекунд (1 сек = 1000 мс), чтобы настроить таймер через поле ввода.</p>
+                <p><b>Шаблон для проверки:</b></p>
+                <span class="syntax">let delay = getNum("as1");<br>log("Запуск...");<br>setTimeout(() => { log("Таймер сработал!"); }, delay);</span>
+            </div>
+            <div class="num-block">
+                <label>Задержка таймера (в миллисекундах):</label> <input type="number" id="num-as1" value="1500" step="500">
+            </div>
+            <textarea id="code-async" class="code-input" placeholder="Напишите асинхронный код..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-async')">Проверить мой код</button>
+
+            <!-- 7. Ошибки -->
+            <h3>7. Перехват ошибок (Try / Catch)</h3>
+            <div class="theory-box">
+                <p><b>Зачем нужно:</b> Предотвращение падений кода. Если ввести в поле 0, наш код умышленно вызовет ошибку деления, но сайт продолжит работать.</p>
+                <p><b>Шаблон для проверки:</b></p>
+                <span class="syntax">let divider = getNum("e1");<br>try {<br>    if(divider === 0) { throw new Error("Деление на ноль!"); }<br>    log("Результат: " + (100 / divider));<br>} catch(err) { log("Поймана ошибка: " + err.message); }</span>
+            </div>
+            <div class="num-block">
+                <label>Знаменатель (введите 0 для генерации ошибки):</label> <input type="number" id="num-e1" value="0">
+            </div>
+            <textarea id="code-err" class="code-input" placeholder="Используйте блок try/catch для проверки деления..."></textarea>
+            <button class="action-btn" onclick="runCustomCode('code-err')">Проверить мой код</button>
+        </div>
+
+        <!-- В КЛАДКА 4: АВТОРИЗАЦИЯ -->
+        <div id="auth-tab" class="tab-content">
+            <div id="login-form-block" class="auth-box">
+                <h2>Форма авторизации</h2>
+                <input type="text" id="username" placeholder="Логин (Любое имя)">
+                <input type="password" id="password" placeholder="Пароль (Любой)">
+                <button class="action-btn" style="width: 100%; margin-top: 10px;" onclick="login()">Войти</button>
+                <p id="error-msg" style="color: red; margin-top: 10px; font-weight: bold;"></p>
+            </div>
+
+            <div id="login-success-block" class="success-box" style="display: none;">
+                <h2>Вы вошли в систему!</h2>
+                <p style="margin-top: 15px;">Добро пожаловать, <b id="user-display">Пользователь</b>.</p>
+                <button class="action-btn" style="margin-top: 15px; background-color: #6c757d;" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 5: СЛУЖБА ПОДДЕРЖКИ -->
+        <div id="support-tab" class="tab-content">
+            <div id="support-locked" style="text-align: center; padding: 20px;">
+                <h2>Доступ ограничен</h2>
+                <p style="color: #ca1c1c; margin: 15px 0; font-weight: bold;">⚠️ Сначала авторизуйтесь на вкладке «Авторизация»!</p>
+            </div>
+
+            <div id="support-active" class="chat-container" style="display: none;">
+                <h2>Служба технической поддержки</h2>
+                <div class="chat-box" id="chat-box"></div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="user-input" placeholder="Напишите ваш вопрос..." style="margin: 0;">
+                    <button class="action-btn" onclick="sendMessage()">Отправить</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ФИКСИРОВАННЫЙ ТЕРМИНАЛ -->
+    <div class="console-box">
+        <strong>🖥️ Терминал вывода JS:</strong>
+        <div id="console-output" style="margin-top: 5px; color: #a6e22e;">Ожидание ввода и запуска кода...</div>
+    </div>
+
+    <!-- === JAVASCRIPT: ДВИЖОК САЙТА === -->
+    <script>
+        const terminal = document.getElementById('console-output');
+        let isAuthorized = false;
+        let currentUsername = "";
+
+        // Кастомный вывод в нижний терминал
+        function log(text) {
+            if (terminal.innerHTML === "Ожидание ввода и запуска кода...") {
+                terminal.innerHTML = "";
+            }
+            terminal.innerHTML += text + " | ";
+        }
+
+        // Функция-мост: считывает значение из нужного инпута по его ID суффиксу и превращает в число
+        function getNum(idSuffix) {
+            const val = document.getElementById('num-' + idSuffix).value;
+            return Number(val);
+        }
+
+        // Движок выполнения кода из пустых текстовых полей
+        function runCustomCode(textareaId) {
+            terminal.innerHTML = ""; // Сброс экрана терминала
+            const userCode = document.getElementById(textareaId).value.trim();
+            
+            if (userCode === "") {
+                terminal.innerHTML = "<span style='color: #ffaa00;'>Поле ввода пусто! Напишите или скопируйте код из шаблона выше перед запуском.</span>";
+                return;
+            }
+            
+            try {
+                // Создаем функцию, добавляя контекст getNum и log, чтобы код пользователя имел к ним доступ
+                const runner = new Function('getNum', 'log', userCode);
+                runner(getNum, log);
+                
+                if (terminal.innerHTML === "") {
+                    terminal.innerHTML = "<span style='color: #999;'>Код выполнился успешно, но вы ничего не вывели через команду log();</span>";
+                }
+            } catch (err) {
+                terminal.innerHTML = "<span style='color: #ff6b6b;'>Ошибка в коде: " + err.message + "</span>";
+            }
+        }
+
+        // Навигация
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            const targetBtn = Array.from(buttons).find(b => b.getAttribute('onclick').includes(tabId));
+            if (targetBtn) targetBtn.classList.add('active');
+        }
+
+        // Авторизация
+        function login() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+
+            if (user !== '' && pass !== '') {
+                isAuthorized = true;
+                currentUsername = user;
+                document.getElementById('user-display').innerText = user;
+                document.getElementById('login-form-block').style.display = 'none';
+                document.getElementById('login-success-block').style.display = 'block';
+
+                document.getElementById('chat-box').innerHTML = `<div class="msg bot-msg"><b>Поддержка:</b> Вы вошли как <b>${user}</b>. Напишите свой вопрос ниже!</div>`;
+                document.getElementById('support-locked').style.display = 'none';
+                document.getElementById('support-active').style.display = 'block';
+            } else {
+                errorMsg.innerText = 'Заполните оба поля!';
+            }
+        }
+
+        function logout() {
+            isAuthorized = false;
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+            document.getElementById('login-form-block').style.display = 'block';
+            document.getElementById('login-success-block').style.display = 'none';
+            document.getElementById('support-locked').style.display = 'block';
+            document.getElementById('support-active').style.display = 'none';
+        }
+
+        // Поддержка
+        function sendMessage() {
+            const inputField = document.getElementById('user-input');
+            const msgText = inputField.value.trim();
+            const chatBox = document.getElementById('chat-box');
+
+            if (msgText === '') return;
+
+            chatBox.innerHTML += `<div class="msg user-msg">${msgText}</div>`;
+            inputField.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            setTimeout(() => {
+                chatBox.innerHTML += `<div class="msg bot-msg"><b>Поддержка:</b> Ответ на вопрос "${msgText}" подготавливается...</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
